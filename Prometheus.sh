@@ -6,9 +6,9 @@ PROMETHEUS_FOLDER_CONFIG="/etc/prometheus"
 PROMETHEUS_FOLDER_TSDATA="/etc/prometheus/data"
 
 cd /tmp
-wget https://github.com/prometheus/prometheus/releases/download/v2.51.2/prometheus-2.51.2.linux-amd64.tar.gz
-tar xf prometheus-$PROMETHEUS_VERSION.linux-amd64.tar.gz
-cd prometheus
+wget https://github.com/prometheus/prometheus/releases/download/v$PROMETHEUS_VERSION/prometheus-$PROMETHEUS_VERSION.linux-amd64.tar.gz
+tar xvfz prometheus-$PROMETHEUS_VERSION.linux-amd64.tar.gz
+cd prometheus-$PROMETHEUS_VERSION.linux-amd64
 
 mv prometheus /usr/bin/
 rm -rf /tmp/prometheus*
@@ -34,7 +34,6 @@ chown prometheus:prometheus $PROMETHEUS_FOLDER_CONFIG/prometheus.yml
 chown prometheus:prometheus $PROMETHEUS_FOLDER_TSDATA
 
 
-
 cat <<EOF> /etc/systemd/system/prometheus.service
 [Unit]
 Description=Prometheus Server
@@ -53,7 +52,8 @@ ExecStart=/usr/bin/prometheus \
 WantedBy=multi-user.target
 EOF
 
-
+systemctl daemon-reload
 systemctl start prometheus
-systemctl enable --now prometheus
-systemctl status prometheus
+systemctl enable prometheus
+systemctl status prometheus --no-pager
+prometheus --version
