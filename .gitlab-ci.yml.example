@@ -1,0 +1,44 @@
+variables:
+    NAME_COMPOSE: "docker-compose"
+    PROJECT_NAME: ""                    # добавляем имя проекта
+    GIT_CLONE_PATH: "$CI_BUILDS_DIR/"
+
+stages:
+  - build
+  - deploy
+
+build-dev:
+  stage: build
+  only:
+    - develop
+  tags:
+    -           # добавляем тег runner
+  script:
+    - docker-compose -f "${NAME_COMPOSE}".yml -p "${PROJECT_NAME}" build
+
+deploy-dev:
+  stage: deploy
+  only:
+    - develop
+  tags:
+    -           # добавляем тег runner
+  script:
+    - docker-compose -f "${NAME_COMPOSE}".yml -p "${PROJECT_NAME}"  down
+    - docker-compose -f "${NAME_COMPOSE}".yml -p "${PROJECT_NAME}"  up -d
+
+
+deploy-prod:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+  - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )'
+  - eval $(ssh-agent -s)
+  - echo "$ssh_key_prod" | tr -d '\r' | ssh-add -
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  - ssh-keyscan $IP_prod >> ~/.ssh/known_hosts
+  - chmod 644 ~/.ssh/known_hosts
+  script:
+  - ssh $user_ssh@$IP_prod "git clone -b main --single-branch $CI_REPOSITORY_URL"
+  only:
+  - main
